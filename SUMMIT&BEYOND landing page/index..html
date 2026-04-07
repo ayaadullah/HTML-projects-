@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title> WildTrail Expeditions | Explore beyond limits.</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Barlow+Condensed:wght@300;400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --black: #080a0d;
+    --deep: #0d1117;
+    --ice: #c8dfe8;
+    --glacier: #7ab3cc;
+    --snow: #f0f4f6;
+    --ember: #d4622a;
+    --gold: #c9a84c;
+    --mist: rgba(200, 223, 232, 0.08);
+  }
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--snow);
+    font-family: 'Barlow Condensed', sans-serif;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* Custom cursor */
+  .cursor {
+    width: 10px; height: 10px;
+    background: var(--ember);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transition: transform 0.15s ease;
+    mix-blend-mode: difference;
+  }
+  .cursor-ring {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(212,98,42,0.5);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9998;
+    transition: all 0.08s linear;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 24px 56px;
+    background: linear-gradient(to bottom, rgba(8,10,13,0.95) 0%, transparent 100%);
+  }
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 22px;
+    letter-spacing: 0.25em;
+    color: var(--snow);
+  }
+  .logo span { color: var(--ember); }
+  .nav-links { display: flex; gap: 40px; list-style: none; }
+  .nav-links a {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.2em;
+    text-transform: uppercase; color: rgba(240,244,246,0.6);
+    text-decoration: none; transition: color 0.3s;
+  }
+  .nav-links a:hover { color: var(--ice); }
+  .nav-cta {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--black);
+    background: var(--ember); border: none; padding: 12px 28px;
+    cursor: none; transition: background 0.3s;
+  }
+  .nav-cta:hover { background: var(--gold); }
+
+  /* HERO */
+  .hero {
+    position: relative; height: 100vh; overflow: hidden;
+    display: flex; align-items: flex-end; padding: 80px 56px;
+  }
+  .hero-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 30% 20%, rgba(122,179,204,0.12) 0%, transparent 60%),
+      radial-gradient(ellipse at 80% 70%, rgba(212,98,42,0.08) 0%, transparent 50%),
+      linear-gradient(160deg, #0a0f16 0%, #060810 50%, #0d1117 100%);
+  }
+  /* SVG mountain silhouette */
+  .hero-mountain {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    height: 70%; opacity: 0.18;
+  }
+  .hero-mountain svg { width: 100%; height: 100%; }
+  .hero-grain {
+    position: absolute; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.4'/%3E%3C/svg%3E");
+    opacity: 0.04; pointer-events: none;
+  }
+  /* Altitude lines */
+  .altitude-lines {
+    position: absolute; right: 56px; top: 50%;
+    transform: translateY(-50%);
+    display: flex; flex-direction: column; gap: 6px; align-items: flex-end;
+  }
+  .alt-line {
+    display: flex; align-items: center; gap: 10px;
+    font-size: 10px; letter-spacing: 0.15em; color: rgba(122,179,204,0.4);
+  }
+  .alt-line::before {
+    content: ''; display: block;
+    height: 1px; background: rgba(122,179,204,0.25);
+    transition: width 0.3s;
+  }
+  .alt-line:nth-child(1)::before { width: 40px; }
+  .alt-line:nth-child(2)::before { width: 60px; }
+  .alt-line:nth-child(3)::before { width: 30px; }
+  .alt-line:nth-child(4)::before { width: 80px; }
+
+  .hero-content { position: relative; z-index: 2; max-width: 900px; }
+  .hero-tag {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--ember);
+    margin-bottom: 20px; display: block;
+    animation: fadeUp 1s 0.2s both;
+  }
+  .hero-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(80px, 12vw, 160px);
+    line-height: 0.9;
+    letter-spacing: 0.02em;
+    animation: fadeUp 1s 0.4s both;
+  }
+  .hero-title .line2 { color: var(--glacier); margin-left: 60px; display: block; }
+  .hero-sub {
+    font-family: 'Crimson Pro', serif;
+    font-style: italic;
+    font-size: 20px;
+    color: rgba(240,244,246,0.55);
+    margin: 28px 0 40px;
+    max-width: 480px;
+    line-height: 1.6;
+    animation: fadeUp 1s 0.6s both;
+  }
+  .hero-actions {
+    display: flex; gap: 20px; align-items: center;
+    animation: fadeUp 1s 0.8s both;
+  }
+  .btn-primary {
+    font-size: 13px; font-weight: 700; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--black);
+    background: var(--ember); border: none;
+    padding: 18px 44px; cursor: none;
+    transition: all 0.3s; text-decoration: none;
+    position: relative; overflow: hidden;
+  }
+  .btn-primary::after {
+    content: ''; position: absolute; inset: 0;
+    background: var(--gold); transform: translateX(-101%);
+    transition: transform 0.4s cubic-bezier(0.77,0,0.175,1);
+  }
+  .btn-primary:hover::after { transform: translateX(0); }
+  .btn-primary span { position: relative; z-index: 1; }
+  .btn-ghost {
+    font-size: 13px; font-weight: 600; letter-spacing: 0.2em;
+    text-transform: uppercase; color: var(--ice);
+    text-decoration: none; display: flex; align-items: center; gap: 10px;
+    transition: gap 0.3s;
+  }
+  .btn-ghost:hover { gap: 18px; }
+  .btn-ghost::after { content: '→'; font-size: 18px; }
+
+  /* SCROLL INDICATOR */
+  .scroll-ind {
+    position: absolute; bottom: 40px; left: 50%;
+    transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; gap: 8px;
+    font-size: 10px; letter-spacing: 0.25em; color: rgba(200,223,232,0.3);
+    animation: fadeUp 1s 1.2s both;
+  }
+  .scroll-line {
+    width: 1px; height: 60px;
+    background: linear-gradient(to bottom, var(--glacier), transparent);
+    animation: scrollPulse 2s infinite;
+  }
+
+  /* STATS BAR */
+  .stats-bar {
+    background: var(--deep);
+    border-top: 1px solid rgba(122,179,204,0.1);
+    border-bottom: 1px solid rgba(122,179,204,0.1);
+    padding: 40px 56px;
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+  }
+  .stat {
+    padding: 0 40px; border-right: 1px solid rgba(122,179,204,0.1);
+    text-align: center;
+  }
+  .stat:first-child { padding-left: 0; }
+  .stat:last-child { border-right: none; }
+  .stat-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 56px; line-height: 1; color: var(--ice);
+  }
+  .stat-num span { color: var(--ember); font-size: 36px; }
+  .stat-label {
+    font-size: 11px; letter-spacing: 0.25em; text-transform: uppercase;
+    color: rgba(200,223,232,0.4); margin-top: 6px;
+  }
+
+  /* EXPEDITIONS */
+  .section { padding: 120px 56px; }
+  .section-header {
+    display: flex; align-items: flex-end; justify-content: space-between;
+    margin-bottom: 64px;
+  }
+  .section-tag {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.3em;
+    text-transform: uppercase; color: var(--ember); margin-bottom: 12px;
+  }
+  .section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 6vw, 80px);
+    line-height: 0.95; letter-spacing: 0.02em;
+  }
+  .section-title em { color: var(--glacier); font-style: normal; }
+  .section-desc {
+    font-family: 'Crimson Pro', serif; font-style: italic;
+    font-size: 18px; color: rgba(240,244,246,0.45);
+    max-width: 300px; line-height: 1.6; text-align: right;
+  }
+
+  .expeditions-grid {
+    display: grid; grid-template-columns: 2fr 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 2px;
+  }
+  .exp-card {
+    position: relative; overflow: hidden;
+    background: var(--deep);
+    cursor: none;
+  }
+  .exp-card.featured { grid-row: 1 / 3; }
+  .exp-card-inner {
+    position: relative; height: 100%;
+    min-height: 280px;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    padding: 36px;
+    background: linear-gradient(to top, rgba(8,10,13,0.95) 0%, rgba(8,10,13,0.3) 60%, transparent 100%);
+    transition: transform 0.6s cubic-bezier(0.23,1,0.32,1);
+  }
+  .exp-card.featured .exp-card-inner { min-height: 560px; }
+  .exp-card:hover .exp-card-inner { transform: scale(1.02); }
+  .exp-bg {
+    position: absolute; inset: 0;
+    transition: transform 0.6s cubic-bezier(0.23,1,0.32,1);
+  }
+  .exp-card:hover .exp-bg { transform: scale(1.06); }
+  /* Mountain illustration backgrounds */
+  .exp-bg.k2 { background: linear-gradient(135deg, #0d1b2e 0%, #1a2a3a 40%, #243545 100%); }
+  .exp-bg.nanga { background: linear-gradient(135deg, #1a0d0a 0%, #2d1810 40%, #3a2218 100%); }
+  .exp-bg.broad { background: linear-gradient(135deg, #0a1520 0%, #12202e 40%, #1e2e3d 100%); }
+  .exp-bg.trek1 { background: linear-gradient(135deg, #0d1a0d 0%, #152415 40%, #1c2e1c 100%); }
+  .exp-bg.trek2 { background: linear-gradient(135deg, #1a1508 0%, #2a2010 40%, #352a18 100%); }
+
+  /* SVG mountain art inside cards */
+  .exp-bg svg { width: 100%; height: 100%; opacity: 0.6; }
+
+  .exp-difficulty {
+    display: inline-block; font-size: 10px; font-weight: 700;
+    letter-spacing: 0.2em; text-transform: uppercase;
+    padding: 5px 12px; margin-bottom: 12px;
+    border: 1px solid;
+  }
+  .exp-difficulty.extreme { color: var(--ember); border-color: var(--ember); }
+  .exp-difficulty.hard { color: var(--gold); border-color: var(--gold); }
+  .exp-difficulty.moderate { color: var(--glacier); border-color: var(--glacier); }
+
+  .exp-name {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 38px; line-height: 1; letter-spacing: 0.02em;
+  }
+  .exp-card.featured .exp-name { font-size: 64px; }
+  .exp-altitude {
+    font-size: 12px; letter-spacing: 0.15em; color: var(--glacier);
+    margin: 6px 0 16px;
+  }
+  .exp-meta {
+    display: flex; gap: 20px;
+    font-size: 11px; letter-spacing: 0.15em; color: rgba(240,244,246,0.45);
+    text-transform: uppercase;
+  }
+  .exp-arrow {
+    position: absolute; top: 28px; right: 28px;
+    width: 44px; height: 44px;
+    border: 1px solid rgba(200,223,232,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; color: var(--ice);
+    opacity: 0; transform: translateY(-8px);
+    transition: all 0.3s;
+  }
+  .exp-card:hover .exp-arrow { opacity: 1; transform: translateY(0); }
+
+  /* WHY US */
+  .why-section {
+    padding: 120px 56px;
+    background: var(--deep);
+    position: relative; overflow: hidden;
+  }
+  .why-grid {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 80px; align-items: center; margin-top: 80px;
+  }
+  .why-visual {
+    position: relative; height: 500px;
+  }
+  .why-img-placeholder {
+    position: absolute; inset: 0;
+    background: linear-gradient(135deg, #0d1b2e, #1a2a3a);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .why-img-placeholder svg { width: 80%; height: 80%; opacity: 0.5; }
+  .why-badge {
+    position: absolute; bottom: -20px; right: -20px;
+    width: 140px; height: 140px;
+    background: var(--ember);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+  }
+  .why-badge-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 52px; line-height: 1; color: var(--snow);
+  }
+  .why-badge-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.15em;
+    text-transform: uppercase; color: rgba(240,244,246,0.7);
+  }
+  .features { display: flex; flex-direction: column; gap: 36px; }
+  .feature { display: flex; gap: 24px; align-items: flex-start; }
+  .feature-icon {
+    width: 48px; height: 48px; flex-shrink: 0;
+    border: 1px solid rgba(122,179,204,0.2);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+  .feature-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 24px; letter-spacing: 0.05em; margin-bottom: 6px;
+  }
+  .feature-desc {
+    font-family: 'Crimson Pro', serif;
+    font-size: 16px; color: rgba(240,244,246,0.45); line-height: 1.7;
+  }
+
+  /* TESTIMONIAL */
+  .testimonial-section {
+    padding: 120px 56px;
+    background: linear-gradient(to bottom, var(--black) 0%, rgba(13,17,23,0.8) 100%);
+    text-align: center; position: relative;
+  }
+  .quote-mark {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 200px; line-height: 0.8;
+    color: rgba(122,179,204,0.06);
+    position: absolute; top: 60px; left: 50%; transform: translateX(-50%);
+    pointer-events: none;
+  }
+  .testimonial-text {
+    font-family: 'Crimson Pro', serif; font-style: italic;
+    font-size: clamp(22px, 3vw, 34px);
+    line-height: 1.5; max-width: 800px; margin: 0 auto 40px;
+    color: rgba(240,244,246,0.8); position: relative;
+  }
+  .testimonial-author {
+    font-size: 12px; font-weight: 700; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--glacier);
+  }
+  .testimonial-dots {
+    display: flex; gap: 8px; justify-content: center; margin-top: 40px;
+  }
+  .dot {
+    width: 6px; height: 6px; background: rgba(122,179,204,0.2);
+    border-radius: 50%; cursor: none; transition: all 0.3s;
+  }
+  .dot.active { background: var(--ember); width: 24px; border-radius: 3px; }
+
+  /* CTA */
+  .cta-section {
+    padding: 160px 56px;
+    background: var(--deep);
+    position: relative; overflow: hidden;
+    text-align: center;
+  }
+  .cta-bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse at 50% 100%, rgba(212,98,42,0.15) 0%, transparent 60%),
+      radial-gradient(ellipse at 50% 0%, rgba(122,179,204,0.08) 0%, transparent 50%);
+  }
+  .cta-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(64px, 9vw, 120px);
+    line-height: 0.9; letter-spacing: 0.02em;
+    position: relative;
+  }
+  .cta-title .accent { color: var(--ember); }
+  .cta-sub {
+    font-family: 'Crimson Pro', serif; font-style: italic;
+    font-size: 20px; color: rgba(240,244,246,0.4);
+    margin: 24px 0 52px; line-height: 1.6;
+  }
+  .cta-actions { display: flex; gap: 20px; justify-content: center; align-items: center; }
+
+  /* FOOTER */
+  footer {
+    background: var(--black);
+    border-top: 1px solid rgba(122,179,204,0.08);
+    padding: 60px 56px 40px;
+  }
+  .footer-grid {
+    display: grid; grid-template-columns: 2fr 1fr 1fr 1fr;
+    gap: 60px; margin-bottom: 60px;
+  }
+  .footer-brand .logo { font-size: 26px; display: block; margin-bottom: 16px; }
+  .footer-tagline {
+    font-family: 'Crimson Pro', serif; font-style: italic;
+    font-size: 15px; color: rgba(240,244,246,0.35); line-height: 1.6;
+  }
+  .footer-col h4 {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.25em;
+    text-transform: uppercase; color: var(--glacier);
+    margin-bottom: 20px;
+  }
+  .footer-col ul { list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  .footer-col ul a {
+    font-size: 14px; color: rgba(240,244,246,0.4);
+    text-decoration: none; transition: color 0.3s; letter-spacing: 0.05em;
+  }
+  .footer-col ul a:hover { color: var(--ice); }
+  .footer-bottom {
+    border-top: 1px solid rgba(122,179,204,0.06);
+    padding-top: 30px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-copy {
+    font-size: 11px; letter-spacing: 0.1em; color: rgba(240,244,246,0.2);
+  }
+  .footer-socials { display: flex; gap: 16px; }
+  .social-btn {
+    width: 36px; height: 36px;
+    border: 1px solid rgba(122,179,204,0.15);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; color: rgba(240,244,246,0.3);
+    text-decoration: none; transition: all 0.3s; cursor: none;
+  }
+  .social-btn:hover { border-color: var(--ember); color: var(--ember); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(30px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes scrollPulse {
+    0%, 100% { opacity: 0.3; }
+    50% { opacity: 1; }
+  }
+
+  /* REVEAL on scroll */
+  .reveal {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+  .reveal-delay-1 { transition-delay: 0.1s; }
+  .reveal-delay-2 { transition-delay: 0.2s; }
+  .reveal-delay-3 { transition-delay: 0.3s; }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursorRing"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="logo">SUMMIT<span>&</span>BEYOND</div>
+  <ul class="nav-links">
+    <li><a href="#expeditions">Expeditions</a></li>
+    <li><a href="#trekking">Trekking</a></li>
+    <li><a href="#why">About</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+  <button class="nav-cta">Book Now</button>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-grain"></div>
+  <div class="hero-mountain">
+    <svg viewBox="0 0 1440 600" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMax slice">
+      <!-- Main peak -->
+      <polygon points="720,20 580,320 860,320" fill="rgba(122,179,204,0.15)"/>
+      <!-- Snow cap -->
+      <polygon points="720,20 680,120 760,120" fill="rgba(200,223,232,0.25)"/>
+      <!-- Left ridge -->
+      <polygon points="580,320 400,600 720,600 860,320" fill="rgba(100,140,165,0.1)"/>
+      <!-- Right ridge -->
+      <polygon points="860,320 1100,600 720,600" fill="rgba(80,120,145,0.08)"/>
+      <!-- Far left mountain -->
+      <polygon points="200,150 50,480 380,480" fill="rgba(80,120,145,0.08)"/>
+      <!-- Far right mountain -->
+      <polygon points="1240,200 1060,520 1440,520" fill="rgba(80,120,145,0.07)"/>
+      <!-- Ground -->
+      <rect x="0" y="480" width="1440" height="120" fill="rgba(10,15,20,0.5)"/>
+    </svg>
+  </div>
+
+  <div class="altitude-lines">
+    <div class="alt-line">8,611 M</div>
+    <div class="alt-line">8,047 M</div>
+    <div class="alt-line">7,788 M</div>
+    <div class="alt-line">5,895 M</div>
+  </div>
+
+  <div class="hero-content">
+    <span class="hero-tag">Pakistan · Himalaya · Karakoram · Hindukush</span>
+    <h1 class="hero-title">
+      WHERE EARTH<br>
+      <span class="line2">MEETS SKY</span>
+    </h1>
+    <p class="hero-sub">We guide the bold to the world's most magnificent summits — from the death zones of K2 to the ancient trails of the Hunza Valley.</p>
+    <div class="hero-actions">
+      <a href="#expeditions" class="btn-primary"><span>Explore Expeditions</span></a>
+      <a href="#why" class="btn-ghost">Our Story</a>
+    </div>
+  </div>
+
+  <div class="scroll-ind">
+    <div class="scroll-line"></div>
+    <span>SCROLL</span>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats-bar reveal">
+  <div class="stat">
+    <div class="stat-num">340<span>+</span></div>
+    <div class="stat-label">Summits Conquered</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">18<span>yr</span></div>
+    <div class="stat-label">In the Field</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">98<span>%</span></div>
+    <div class="stat-label">Safe Return Rate</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num">62<span>+</span></div>
+    <div class="stat-label">Countries Served</div>
+  </div>
+</div>
+
+<!-- EXPEDITIONS -->
+<section class="section" id="expeditions">
+  <div class="section-header reveal">
+    <div>
+      <p class="section-tag">Signature Expeditions</p>
+      <h2 class="section-title">CONQUER THE<br><em>IMPOSSIBLE</em></h2>
+    </div>
+    <p class="section-desc">Curated for those who refuse to see limits — only horizons.</p>
+  </div>
+
+  <div class="expeditions-grid reveal">
+    <!-- Featured -->
+    <div class="exp-card featured">
+      <div class="exp-bg k2">
+        <svg viewBox="0 0 400 600" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="sky1" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#0d1b2e"/>
+              <stop offset="100%" style="stop-color:#1a2a3a"/>
+            </linearGradient>
+          </defs>
+          <rect width="400" height="600" fill="url(#sky1)"/>
+          <!-- Stars -->
+          <circle cx="50" cy="80" r="1" fill="white" opacity="0.6"/>
+          <circle cx="120" cy="40" r="1.5" fill="white" opacity="0.4"/>
+          <circle cx="280" cy="60" r="1" fill="white" opacity="0.7"/>
+          <circle cx="360" cy="90" r="1" fill="white" opacity="0.5"/>
+          <circle cx="200" cy="30" r="1" fill="white" opacity="0.6"/>
+          <!-- K2 silhouette -->
+          <polygon points="200,50 100,350 300,350" fill="rgba(40,70,100,0.8)"/>
+          <polygon points="200,50 160,160 240,160" fill="rgba(200,220,240,0.3)"/>
+          <polygon points="100,350 0,600 400,600 300,350" fill="rgba(20,40,60,0.9)"/>
+          <!-- Snow streaks -->
+          <line x1="200" y1="50" x2="175" y2="200" stroke="rgba(200,223,232,0.2)" stroke-width="1"/>
+          <line x1="200" y1="50" x2="225" y2="180" stroke="rgba(200,223,232,0.15)" stroke-width="1"/>
+        </svg>
+      </div>
+      <div class="exp-card-inner">
+        <div class="exp-arrow">→</div>
+        <span class="exp-difficulty extreme">Extreme</span>
+        <div class="exp-name">K2 SUMMIT<br>EXPEDITION</div>
+        <div class="exp-altitude">▲ 8,611 M — KARAKORAM</div>
+        <div class="exp-meta">
+          <span>60 Days</span>
+          <span>Apr–Aug</span>
+          <span>From $18,500</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="exp-card">
+      <div class="exp-bg nanga">
+        <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+          <rect width="300" height="300" fill="#1a0d0a"/>
+          <polygon points="150,30 60,250 240,250" fill="rgba(80,40,30,0.7)"/>
+          <polygon points="150,30 120,110 180,110" fill="rgba(220,200,180,0.25)"/>
+          <rect x="0" y="250" width="300" height="50" fill="rgba(15,8,5,0.9)"/>
+        </svg>
+      </div>
+      <div class="exp-card-inner">
+        <div class="exp-arrow">→</div>
+        <span class="exp-difficulty extreme">Extreme</span>
+        <div class="exp-name">NANGA PARBAT</div>
+        <div class="exp-altitude">▲ 8,126 M</div>
+        <div class="exp-meta"><span>45 Days</span><span>From $14,200</span></div>
+      </div>
+    </div>
+
+    <!-- Card 3 -->
+    <div class="exp-card">
+      <div class="exp-bg broad">
+        <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+          <rect width="300" height="300" fill="#0a1520"/>
+          <polygon points="150,60 40,260 260,260" fill="rgba(40,80,120,0.6)"/>
+          <polygon points="150,60 115,160 185,160" fill="rgba(180,210,230,0.2)"/>
+        </svg>
+      </div>
+      <div class="exp-card-inner">
+        <div class="exp-arrow">→</div>
+        <span class="exp-difficulty hard">Hard</span>
+        <div class="exp-name">BROAD PEAK</div>
+        <div class="exp-altitude">▲ 8,047 M</div>
+        <div class="exp-meta"><span>50 Days</span><span>From $12,800</span></div>
+      </div>
+    </div>
+
+    <!-- Card 4 -->
+    <div class="exp-card">
+      <div class="exp-bg trek1">
+        <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+          <rect width="300" height="300" fill="#0d1a0d"/>
+          <polygon points="80,80 0,280 160,280" fill="rgba(30,70,30,0.6)"/>
+          <polygon points="220,100 130,280 300,280" fill="rgba(25,60,25,0.5)"/>
+          <polygon points="150,60 110,180 190,180" fill="rgba(160,200,160,0.15)"/>
+        </svg>
+      </div>
+      <div class="exp-card-inner">
+        <div class="exp-arrow">→</div>
+        <span class="exp-difficulty moderate">Moderate</span>
+        <div class="exp-name">FAIRY MEADOWS TREK</div>
+        <div class="exp-altitude">▲ 3,300 M</div>
+        <div class="exp-meta"><span>7 Days</span><span>From $1,200</span></div>
+      </div>
+    </div>
+
+    <!-- Card 5 -->
+    <div class="exp-card">
+      <div class="exp-bg trek2">
+        <svg viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+          <rect width="300" height="300" fill="#1a1508"/>
+          <polygon points="100,70 10,270 200,270" fill="rgba(80,60,20,0.6)"/>
+          <polygon points="220,90 130,270 300,270" fill="rgba(70,50,15,0.5)"/>
+          <polygon points="100,70 70,160 130,160" fill="rgba(220,200,160,0.18)"/>
+        </svg>
+      </div>
+      <div class="exp-card-inner">
+        <div class="exp-arrow">→</div>
+        <span class="exp-difficulty moderate">Moderate</span>
+        <div class="exp-name">K2 BASE CAMP</div>
+        <div class="exp-altitude">▲ 5,150 M</div>
+        <div class="exp-meta"><span>14 Days</span><span>From $3,400</span></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WHY US -->
+<section class="why-section" id="why">
+  <div class="reveal">
+    <p class="section-tag">Why Summit & Beyond</p>
+    <h2 class="section-title">BUILT BY<br><em>MOUNTAINEERS</em></h2>
+  </div>
+
+  <div class="why-grid">
+    <div class="why-visual reveal">
+      <div class="why-img-placeholder">
+        <svg viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="mountainGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" style="stop-color:#1a2a3a"/>
+              <stop offset="100%" style="stop-color:#0d1117"/>
+            </linearGradient>
+          </defs>
+          <rect width="400" height="500" fill="url(#mountainGrad)"/>
+          <!-- Large mountain -->
+          <polygon points="200,40 60,400 340,400" fill="rgba(122,179,204,0.2)"/>
+          <polygon points="200,40 165,155 235,155" fill="rgba(200,223,232,0.4)"/>
+          <!-- Ridge lines -->
+          <polyline points="200,40 155,200 110,300 60,400" stroke="rgba(122,179,204,0.15)" stroke-width="1" fill="none"/>
+          <polyline points="200,40 245,195 290,300 340,400" stroke="rgba(122,179,204,0.15)" stroke-width="1" fill="none"/>
+          <!-- Ground shadows -->
+          <rect x="0" y="400" width="400" height="100" fill="rgba(8,10,13,0.8)"/>
+          <!-- Stars -->
+          <circle cx="40" cy="60" r="1.2" fill="rgba(200,223,232,0.7)"/>
+          <circle cx="340" cy="80" r="1" fill="rgba(200,223,232,0.5)"/>
+          <circle cx="100" cy="30" r="1.5" fill="rgba(200,223,232,0.6)"/>
+          <circle cx="290" cy="50" r="1" fill="rgba(200,223,232,0.4)"/>
+          <circle cx="160" cy="20" r="1" fill="rgba(200,223,232,0.5)"/>
+          <!-- Climber silhouette (simple) -->
+          <circle cx="205" cy="165" r="5" fill="rgba(240,244,246,0.6)"/>
+          <line x1="205" y1="170" x2="205" y2="195" stroke="rgba(240,244,246,0.4)" stroke-width="2"/>
+          <line x1="195" y1="180" x2="215" y2="183" stroke="rgba(240,244,246,0.4)" stroke-width="1.5"/>
+          <line x1="205" y1="195" x2="196" y2="215" stroke="rgba(240,244,246,0.4)" stroke-width="2"/>
+          <line x1="205" y1="195" x2="214" y2="215" stroke="rgba(240,244,246,0.4)" stroke-width="2"/>
+          <!-- Ice axe -->
+          <line x1="217" y1="170" x2="230" y2="215" stroke="rgba(200,223,232,0.5)" stroke-width="1.5"/>
+          <line x1="225" y1="171" x2="233" y2="174" stroke="rgba(200,223,232,0.5)" stroke-width="1.5"/>
+        </svg>
+      </div>
+      <div class="why-badge">
+        <div class="why-badge-num">18</div>
+        <div class="why-badge-label">Years of<br>Excellence</div>
+      </div>
+    </div>
+
+    <div class="features">
+      <div class="feature reveal">
+        <div class="feature-icon">🏔️</div>
+        <div>
+          <div class="feature-title">CERTIFIED HIGH-ALTITUDE GUIDES</div>
+          <p class="feature-desc">Every expedition is led by IFMGA-certified mountaineers with decades of high-altitude experience across the Karakoram and Himalaya.</p>
+        </div>
+      </div>
+      <div class="feature reveal reveal-delay-1">
+        <div class="feature-icon">🛡️</div>
+        <div>
+          <div class="feature-title">SAFETY FIRST PROTOCOL</div>
+          <p class="feature-desc">Satellite communication, emergency evacuation plans, and acclimatization schedules that keep your summit bid both ambitious and safe.</p>
+        </div>
+      </div>
+      <div class="feature reveal reveal-delay-2">
+        <div class="feature-icon">⚡</div>
+        <div>
+          <div class="feature-title">FULL EXPEDITION SUPPORT</div>
+          <p class="feature-desc">From visa logistics to base camp setup, high-altitude porters, oxygen, and gourmet camp meals — we handle everything.</p>
+        </div>
+      </div>
+      <div class="feature reveal reveal-delay-3">
+        <div class="feature-icon">🌍</div>
+        <div>
+          <div class="feature-title">SUSTAINABLE MOUNTAINEERING</div>
+          <p class="feature-desc">We operate with strict leave-no-trace principles, supporting local communities and preserving the ranges we call home.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TESTIMONIAL -->
+<section class="testimonial-section">
+  <div class="quote-mark">"</div>
+  <p class="testimonial-text reveal" id="testimonial-text">
+    Standing on the summit of K2 at dawn, with Summit & Beyond's team beside me — it was not just a climb. It was the most profound experience of my life.
+  </p>
+  <p class="testimonial-author reveal" id="testimonial-author">— MARCO REINHARDT, ALPINIST — GERMANY</p>
+  <div class="testimonial-dots">
+    <div class="dot active" onclick="switchTestimonial(0)"></div>
+    <div class="dot" onclick="switchTestimonial(1)"></div>
+    <div class="dot" onclick="switchTestimonial(2)"></div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section" id="contact">
+  <div class="cta-bg"></div>
+  <div class="reveal" style="position:relative">
+    <h2 class="cta-title">YOUR SUMMIT<br><span class="accent">AWAITS.</span></h2>
+    <p class="cta-sub">Begin your expedition planning today. Our team responds within 24 hours.</p>
+    <div class="cta-actions">
+      <a href="mailto:expeditions@summitandbeyond.com" class="btn-primary"><span>Plan My Expedition</span></a>
+      <a href="tel:+92512345678" class="btn-ghost">+92 51 234 5678</a>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <span class="logo">SUMMIT<span style="color:var(--ember)">&</span>BEYOND</span>
+      <p class="footer-tagline">Guiding the bold to the world's highest places since 2006. Based in Islamabad, operating globally.</p>
+    </div>
+    <div class="footer-col">
+      <h4>Expeditions</h4>
+      <ul>
+        <li><a href="#">K2 Summit</a></li>
+        <li><a href="#">Nanga Parbat</a></li>
+        <li><a href="#">Broad Peak</a></li>
+        <li><a href="#">Gasherbrum I & II</a></li>
+        <li><a href="#">Rakaposhi</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Trekking</h4>
+      <ul>
+        <li><a href="#">K2 Base Camp</a></li>
+        <li><a href="#">Fairy Meadows</a></li>
+        <li><a href="#">Gondogoro La</a></li>
+        <li><a href="#">Concordia</a></li>
+        <li><a href="#">Hunza Valley</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Our Guides</a></li>
+        <li><a href="#">Safety Policy</a></li>
+        <li><a href="#">Gallery</a></li>
+        <li><a href="#">Contact</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p class="footer-copy">© Crafting visuals & code — Code.With.Ayaad.</p>
+    <div class="footer-socials">
+      <a href="#" class="social-btn">in</a>
+      <a href="#" class="social-btn">ig</a>
+      <a href="#" class="social-btn">yt</a>
+      <a href="#" class="social-btn">fb</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Custom cursor
+  const cursor = document.getElementById('cursor');
+  const ring = document.getElementById('cursorRing');
+  let mx = 0, my = 0, rx = 0, ry = 0;
+  document.addEventListener('mousemove', e => { mx = e.clientX; my = e.clientY; });
+  function animateCursor() {
+    cursor.style.left = mx - 5 + 'px';
+    cursor.style.top = my - 5 + 'px';
+    rx += (mx - rx) * 0.12;
+    ry += (my - ry) * 0.12;
+    ring.style.left = rx - 18 + 'px';
+    ring.style.top = ry - 18 + 'px';
+    requestAnimationFrame(animateCursor);
+  }
+  animateCursor();
+
+  // Scroll reveal
+  const reveals = document.querySelectorAll('.reveal');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visible'); });
+  }, { threshold: 0.12 });
+  reveals.forEach(r => obs.observe(r));
+
+  // Testimonials
+  const testimonials = [
+    { text: "Standing on the summit of K2 at dawn, with Summit & Beyond's team beside me — it was not just a climb. It was the most profound experience of my life.", author: "— MARCO REINHARDT, ALPINIST — GERMANY" },
+    { text: "The Fairy Meadows trek changed everything for me. Flawless logistics, incredible guides, and landscapes that feel borrowed from another planet.", author: "— SARA KIMURA, ADVENTURE TRAVELLER — JAPAN" },
+    { text: "I've climbed with agencies worldwide. None match the expertise, warmth, and sheer professionalism of the Summit & Beyond team.", author: "— DAVID MCLEAN, MOUNTAINEER — SCOTLAND" }
+  ];
+  let current = 0;
+  function switchTestimonial(i) {
+    current = i;
+    document.getElementById('testimonial-text').style.opacity = 0;
+    document.getElementById('testimonial-author').style.opacity = 0;
+    setTimeout(() => {
+      document.getElementById('testimonial-text').textContent = testimonials[i].text;
+      document.getElementById('testimonial-author').textContent = testimonials[i].author;
+      document.getElementById('testimonial-text').style.opacity = 1;
+      document.getElementById('testimonial-author').style.opacity = 1;
+    }, 300);
+    document.querySelectorAll('.dot').forEach((d, j) => d.classList.toggle('active', j === i));
+  }
+  document.getElementById('testimonial-text').style.transition = 'opacity 0.4s';
+  document.getElementById('testimonial-author').style.transition = 'opacity 0.4s';
+  setInterval(() => switchTestimonial((current + 1) % 3), 5000);
+</script>
+</body>
+</html>
